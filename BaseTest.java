@@ -1,9 +1,15 @@
 package com.ibm.test;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -11,6 +17,7 @@ import org.testng.annotations.Test;
 import com.ibm.pages.AdminPage;
 import com.ibm.pages.BannerPage;
 import com.ibm.pages.CouponPage;
+import com.ibm.pages.CustomerPage;
 import com.ibm.pages.LoginPage;
 import com.ibm.pages.ProductPage;
 import com.ibm.pages.ReturnPage;
@@ -284,17 +291,44 @@ public class BaseTest {
 	public void Day6Testcase() throws IOException, InterruptedException
 	{
 		
-		String file="./TestData/magentodata.properties";
-		
+		/*String file="./TestData/magentodata.properties";
 		PropertiesFileHandler propFileHandler = new PropertiesFileHandler();
-		HashMap<String, String> data= propFileHandler.getPropertiesAsMap(file);
+		HashMap<String, String> data= propFileHandler.getPropertiesAsMap(file);*/
 		
-		String url = data.get("url");
+		/*String url = data.get("url");
 		String email = data.get("email");
 		String password = data.get("password");
 		String tabname = data.get("tabname");
-		String sortorder = data.get("sortorder");
-				
+		String sortorder = data.get("sortorder");*/
+		
+		//Location of Excel file
+		FileInputStream excelfile = new FileInputStream("./TestData/TestData.xlsx");
+		//Open Excel file
+		XSSFWorkbook book = new XSSFWorkbook(excelfile);
+		//1st sheet on workbook - LoginData
+		XSSFSheet logindata = book.getSheet("LoginData");
+		//Row
+		XSSFRow loginrow = logindata.getRow(1);
+		//Cell
+		XSSFCell ul = loginrow.getCell(0);
+		XSSFCell em = loginrow.getCell(1);
+		XSSFCell pw = loginrow.getCell(2);
+								
+		String url = ul.getStringCellValue();
+		String email = em.getStringCellValue();
+		String password = pw.getStringCellValue();
+		
+		//2nd sheet on workbook - Tabs
+		XSSFSheet tabs = book.getSheet("Tabs");
+		//Row
+		XSSFRow row = tabs.getRow(1);
+		//Cell
+		XSSFCell tn = row.getCell(0);
+		XSSFCell so = row.getCell(1);
+									
+		String tabname = tn.getStringCellValue();
+		String sortorder = so.getStringCellValue();
+						
 		System.setProperty("webdriver.chrome.driver", "./drivers/chromedriver.exe");
 		WebDriver driver = new ChromeDriver();
 		WebDriverWait wait=new WebDriverWait(driver, 60);
@@ -314,20 +348,58 @@ public class BaseTest {
 		tp.clickOnIconAddNew();
 		tp.enterTabName(tabname);
 		tp.enterSortOrder(sortorder);
-		tp.clickOnStatus();
+		tp.selectStatus();
 		tp.clickOnIconSave();
+		Thread.sleep(2000);
 		tp.validationOnRecord();
 		
-		UserPage up = new UserPage ();
+		UserPage up = new UserPage (driver, wait);
 		up.verifytab();
+		
+		book.close();
 		
 //		apage.clickOnLogOut();
 
 //		driver.close();
 		
+	}
+	
+//	@Test
+	public void Day7Testcase() throws IOException, InterruptedException
+	{
+		String file="./TestData/magentodata.properties";
 		
-				
-//		driver.close();
+		PropertiesFileHandler propFileHandler = new PropertiesFileHandler();
+		HashMap<String, String> data= propFileHandler.getPropertiesAsMap(file);
+		
+		String userurl = data.get("userurl");
+		String fullname = data.get("fullname");
+		String pno = data.get("pno");
+		String newpassword = data.get("newpassword");
+		String confpassword = data.get("confpassword");
+		
+		System.setProperty("webdriver.chrome.driver", "./drivers/chromedriver.exe");
+		WebDriver driver = new ChromeDriver();
+		WebDriverWait wait=new WebDriverWait(driver, 60);
+		driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(30,TimeUnit.SECONDS);
+		driver.get(userurl);
+		
+		UserPage up = new UserPage(driver, wait);
+		up.clickOnLinkSignUp();
+		up.enterFullName(fullname);
+		up.enterPhoneNo(pno);
+		up.enterPassword(newpassword);
+		up.enterConfirmPassword(confpassword);
+		up.clickOnTermCondition();
+		up.clickOnButtonSignUp();
+		Thread.sleep(2000);
+		up.clickOnAlertBox();		
+		driver.close();
+		
+		CustomerPage custp = new CustomerPage(driver, wait);
+//		custp.
+		
 		
 	}
 	
